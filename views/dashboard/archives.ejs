@@ -5,11 +5,12 @@
 
 
         <div class="btn-group w-100">
-            <a href="#" class="btn btn-outline-secondary w-100 rounded-0 active">已發佈</a>
-            <a href="#" class="btn btn-outline-secondary w-100 rounded-0 ">草稿</a>
-            <a href="article" class="btn btn-primary">新增文章</a>
+            <a href="/dashboard/archives?status=public"
+               class="btn btn-outline-secondary w-100 rounded-0 <% if (status === 'public') { %>active<% } %>">已發佈</a>
+            <a href="/dashboard/archives?status=draft"
+               class="btn btn-outline-secondary w-100 rounded-0 <% if (status === 'draft') { %>active<% } %>">草稿</a>
+            <a href="/dashboard/article/create" class="btn btn-primary">新增文章</a>
         </div>
-
 
         <% for (var prop in articles) { %>
         <div class="card my-3">
@@ -25,13 +26,17 @@
                     <span class="fa fa-folder-open-o"></span>
                     <span>
 
-                <%- categories[articles[prop].category].name %>
+                        <% if (categories.hasOwnProperty(articles[prop].category)) { %>
+                        <%= categories[articles[prop].category].name %>
+                        <% } else { %>
+                        沒有分類
+                        <% } %>
 
-            </span>
+                    </span>
                 </div>
             </div>
             <div class="card-footer p-0 btn-group">
-                <a href="#" class="btn btn-outline-danger rounded-0 deletePost" data-id="<%- prop %>"
+                <a href="#" class="btn btn-outline-danger rounded-0 deletePost" data-id="<%- articles[prop].id %>"
                    data-title="<%- articles[prop].title %>">刪除</a>
                 <a href="#" class="btn btn-outline-secondary w-100 rounded-0">編輯</a>
 
@@ -40,7 +45,6 @@
             </div>
         </div>
         <% } %>
-
 
     </div>
 </div>
@@ -69,3 +73,21 @@
         </li>
     </ul>
 </nav>
+
+<script>
+  $(document).ready(function () {
+    $('.deletePost').on('click', function (e) {
+      e.preventDefault();
+      var id = $(this).data('id');
+      var title = $(this).data('title');
+      if (confirm('確認是否刪除 ' + title)) {
+        $.ajax({
+          url: '/dashboard/article/delete/' + id,
+          method: 'POST'
+        }).done(function (response) {
+          window.location = '/dashboard/archives';
+        })
+      }
+    });
+  });
+</script>

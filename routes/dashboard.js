@@ -7,6 +7,9 @@ const firebaseAdminDb = require('../connections/firebase_admin');
 const categoriesRef = firebaseAdminDb.ref('/categories/');
 const articlesRef = firebaseAdminDb.ref('/articles/');
 
+router.get('/', function (req, res, next) {
+  res.render('dashboard/index', {email: req.session.email});
+})
 
 router.get('/article/create', function(req, res, next) {
   categoriesRef.once('value').then(function (snapshot) {
@@ -54,10 +57,20 @@ router.post('/article/update/:id', function (req, res) {
   });
 });
 
+router.post('/article/delete/:id', function (req, res, next) {
+  const id = req.param('id');
+  articlesRef.child(id).remove();
+  req.flash('info', '欄位已刪除');
+  res.send('文章已刪除');
+  res.end();
+  // res.redirect('/dashboard/categories');
+});
+
 
 
 
 router.get('/archives', function(req, res, next) {
+  const status = req.query.status || 'public';
   let categories = [];
   categoriesRef.once('value').then(function (snapshot) {
     categories = snapshot.val();
@@ -66,14 +79,17 @@ router.get('/archives', function(req, res, next) {
     .then(function (snapshot) {
       const articles = [];
       snapshot.forEach(function (snapshotChild) {
-        articles.push(snapshotChild.val());
+        if (status === snapshotChild.val().status) {
+          articles.push(snapshotChild.val());
+        }
       });
       articles.reverse();
       res.render('dashboard/archives', {
         categories,
         articles,
         stringtags,
-        moment
+        moment,
+        status
       })
     });
 });
